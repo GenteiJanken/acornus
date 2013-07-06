@@ -43,7 +43,7 @@ class Game:
 			self.accum_time = 0.0
 	
 	def draw(self):
-		pass
+		self.tree.draw(self.window)
 
 class Squirrel():
 
@@ -55,23 +55,30 @@ class Squirrel():
 	def update(self, dt, key):
 		
 		if key == UP:
-		
+	
+			if self.node.nut == 0:
+				self.node.nut = self.nut
+			else:
+				tmp = self.nut
+				self.nut = self.node.nut 
+				self.node.nut = tmp	
+				
 		elif key == LEFT:
 			self.move_to(self.node.left)
 		elif key == RIGHT:
 			self.move_to(self.node.right)
 		elif key == DOWN:
 			self.move_to(self.node.parent)
-		elif key == SPACE:
 		
+			
 		
-	def move_to(self, target)
+	def move_to(self, target):
 		self.node.squirrel = None
 		self.node = target
 		self.node.squirrel = self
 
 	def draw(self, window, x, y):
-		pass
+		window.blit(self.sprite, (x,y))
 
 class OakTree():
 
@@ -80,6 +87,7 @@ class OakTree():
 		self.root = Node()
 		self.lean_rate = 0.0
 		self.lean = 0.0
+		self.dimensions = [50, 100]		
 
 	def update(self, dt):
 		self.lean += self.lean_rate * dt
@@ -124,10 +132,11 @@ class OakTree():
 
 class Node:
 	
-	def __init__(self, parent = None):
+	def __init__(self, position, parent = None, ):
 		self.parent = parent or self
 		self.left = None
 		self.right = None
+		self.position = position
 		self.nut = 0
 		self.squirrel = None
 
