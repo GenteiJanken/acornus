@@ -83,11 +83,11 @@ class Squirrel():
 class OakTree():
 
 	def __init__(self, sprite):
-		self.sprite = sprite
-		self.root = Node()
+		self.sprite = sprite		
 		self.lean_rate = 0.0
 		self.lean = 0.0
 		self.dimensions = [50, 100]		
+		self.root = Node((0, 100))
 
 	def update(self, dt):
 		self.lean += self.lean_rate * dt
@@ -105,6 +105,7 @@ class OakTree():
 		newleaves = []
 
 		for l in leaves:
+
 			l.left = Node(l)
 			l.right = Node(l)	
 			l.nut = 0
@@ -132,7 +133,7 @@ class OakTree():
 
 class Node:
 	
-	def __init__(self, position, parent = None, ):
+	def __init__(self, position, parent = None):
 		self.parent = parent or self
 		self.left = None
 		self.right = None
