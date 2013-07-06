@@ -63,15 +63,15 @@ class Squirrel():
 				self.nut = self.node.nut 
 				self.node.nut = tmp	
 				
-		elif key == LEFT:
+		elif key == LEFT and self.node.left:
 			self.move_to(self.node.left)
-		elif key == RIGHT:
+		elif key == RIGHT and self.node.right:
 			self.move_to(self.node.right)
-		elif key == DOWN:
+		elif key == DOWN and not (self.node.parent == self.node):
 			self.move_to(self.node.parent)
-		
-			
-		
+		else: #invalid input	
+			return
+
 	def move_to(self, target):
 		self.node.squirrel = None
 		self.node = target
