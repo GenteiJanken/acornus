@@ -13,7 +13,7 @@ class Game:
 
 	def __init__(self, window):
 		self.window = window
-		self.tree = OakTree()
+		self.tree = OakTree(None)
 		self.squirrel = Squirrel(None)
 		self.accum_time = 0.0
 		self.total_time = 0.0
@@ -53,14 +53,30 @@ class Squirrel():
 		self.node = None
 		
 	def update(self, dt, key):
-		pass
+		
+		if key == UP:
+		
+		elif key == LEFT:
+			self.move_to(self.node.left)
+		elif key == RIGHT:
+			self.move_to(self.node.right)
+		elif key == DOWN:
+			self.move_to(self.node.parent)
+		elif key == SPACE:
+		
+		
+	def move_to(self, target)
+		self.node.squirrel = None
+		self.node = target
+		self.node.squirrel = self
 
 	def draw(self, window, x, y):
 		pass
 
 class OakTree():
 
-	def __init__(self):
+	def __init__(self, sprite):
+		self.sprite = sprite
 		self.root = Node()
 		self.lean_rate = 0.0
 		self.lean = 0.0
@@ -83,6 +99,7 @@ class OakTree():
 		for l in leaves:
 			l.left = Node(l)
 			l.right = Node(l)	
+			l.nut = 0
 			newleaves.append(l.left)
 			newleaves.append(l.right)
 
@@ -95,10 +112,6 @@ class OakTree():
 				newleaves[i].grow_nut()
 				acorns -= 1
 		
-
-	
-
-
 
 	#Determines weight on two main subtrees, updates
 	def balance(self):

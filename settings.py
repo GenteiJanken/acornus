@@ -7,3 +7,6 @@ SPAWN_PERIOD_END = 90
 # Tree leaning (degrees)
 LEAN_RATE_SCALE = 2.0
 LEAN_THRESHOLD = 65
+
+# Other
+MAX_GENERATIONS = 5
