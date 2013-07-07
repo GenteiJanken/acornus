@@ -1,4 +1,4 @@
-# Acornus, a game for MolyJam Deux (2013)
+# Acornus, a game for MolyJam Deux (2013) by Josh Douglass-Molloy, with illustrations by Colin Capurso
 # "We're taking acorns to the next level." - Peter Molyneux
 #
 # main.py - main loop and game essentials
@@ -32,13 +32,13 @@ class Game:
 		self.accum_time += dt
 		self.total_time += dt
 					
-		period = settings.SPAWN_PERIOD - \
-			(settings.SPAWN_PERIOD - settings.SPAWN_PERIOD_END) * \
-			(self.total_time / settings.SPAWN_SCALE_TIME)
+		period = settings.GROWTH_PERIOD - \
+			(settings.GROWTH_PERIOD - settings.GROWTH_PERIOD_END) * \
+			(self.total_time / settings.GROWTH_SCALE_TIME)
 
-		period = min(period, settings.SPAWN_PERIOD_END)
+		period = min(period, settings.GROWTH_PERIOD_END)
 		
-		if int(self.accum_time) >= period:
+		if int(self.accum_time) >= period and self.tree.generations < settings.MAX_GENERATIONS:
 			#generate branches
 			self.tree.generate()
 			self.accum_time = 0.0
@@ -49,6 +49,9 @@ class Game:
 		self.tree.draw(self.window)
 		
 		pygame.display.update()
+
+	def world_to_screen(x, y):
+		pass
 
 class Squirrel():
 
@@ -86,8 +89,14 @@ class Squirrel():
 		self.node = target
 		self.node.squirrel = self
 
-	def draw(self, window, x, y):
-		window.blit(self.sprite, (x,y))
+	def draw(self, window):
+		x = self.node.position[0]
+		y = self.node.position[1]
+		
+		if self.node == self.node.parent.left:
+			pass
+		else:
+			window.blit(self.sprite, (x,y))
 
 class OakTree():
 
@@ -97,14 +106,14 @@ class OakTree():
 		self.lean = 0.0
 		self.dimensions = [settings.TRUNK_DIMENSIONS[0], settings.TRUNK_DIMENSIONS[1]]		
 		self.root = Node((0, 100))
-		
+		self.generations = 0
 
 	def update(self, dt):
 		self.lean += self.lean_rate * dt
 		return self.lean
 
 	def draw(self, window):
-		pass
+		
 	
 	def leaves(self):
 		leaflist = []
@@ -132,6 +141,7 @@ class OakTree():
 				newleaves[i].grow_nut()
 				acorns -= 1
 		
+		self.generations += 1
 		self.balance()
 
 	#Determines weight on two main subtrees, updates
@@ -194,5 +204,4 @@ while running:
 	clock.tick(30)
 	dt = clock.get_time()/1000.0
 	game.update(dt)
-	
 	game.draw()
