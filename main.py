@@ -6,7 +6,7 @@
 
 import pygame, os, sys
 import settings
-import random
+import random, math
 from pygame.locals import *
 
 class Game:
@@ -15,6 +15,8 @@ class Game:
 		self.window = window
 		self.tree = OakTree()
 		self.squirrel = Squirrel(self.tree)
+		self.tree.generate()
+		
 		self.accum_time = 0.0
 		self.total_time = 0.0
 		
@@ -47,7 +49,7 @@ class Game:
 	def draw(self):
 		self.window.fill(settings.SKY_COLOUR)
 		self.tree.draw(self.window)
-		
+		self.squirrel.draw(self.window)
 		pygame.display.update()
 
 	def world_to_screen(x, y):
@@ -67,13 +69,13 @@ class Squirrel():
 	
 			if self.node.nut == 0:
 				self.node.nut = self.nut
+				self.nut = 0
 			else:
 				tmp = self.nut
 				self.nut = self.node.nut 
 				self.node.nut = tmp	
 			
-			self.tree.balance()
-						
+			self.tree.balance()					
 	
 		elif key == K_LEFT and self.node.left:
 			self.move_to(self.node.left)
@@ -81,8 +83,7 @@ class Squirrel():
 			self.move_to(self.node.right)
 		elif key == K_DOWN and not (self.node.parent == self.node):
 			self.move_to(self.node.parent)
-		else: #invalid input	
-			return
+	
 
 	def move_to(self, target):
 		self.node.squirrel = None
@@ -93,27 +94,25 @@ class Squirrel():
 		x = self.node.position[0]
 		y = self.node.position[1]
 		
-		if self.node == self.node.parent.left:
-			pass
-		else:
-			window.blit(self.sprite, (x,y))
+		flip = (self.node == self.node.parent.left)
+		window.blit(pygame.transform.flip(pygame.transform.scale(self.sprite, (32, 32)), flip, False), self.node.position)
 
 class OakTree():
 
-	def __init__(self, ):
+	def __init__(self):
 			
 		self.lean_rate = 0.0
 		self.lean = 0.0
 		self.dimensions = [settings.TRUNK_DIMENSIONS[0], settings.TRUNK_DIMENSIONS[1]]		
-		self.root = Node((0, 100))
+		self.root = Node(settings.TRUNK_ROTATION, (500, 100))
 		self.generations = 0
 
 	def update(self, dt):
 		self.lean += self.lean_rate * dt
 		return self.lean
 
-	def draw(self, window):
-		
+	def draw(self, window):		  
+		self.root.draw(window)
 	
 	def leaves(self):
 		leaflist = []
@@ -125,14 +124,19 @@ class OakTree():
 		newleaves = []
 
 		for l in leaves:
+			leftrot = l.rotation + settings.BRANCH_ROTATION
+			leftpos = (l.position[0] + settings.BRANCH_LENGTH * math.cos(math.radians(leftrot)), l.position[1] + settings.BRANCH_LENGTH * math.sin(math.radians(leftrot)))
+			
+			rightrot = l.rotation - settings.BRANCH_ROTATION
+			rightpos = (l.position[0] + settings.BRANCH_LENGTH * math.cos(math.radians(rightrot)), l.position[1] + settings.BRANCH_LENGTH * math.sin(math.radians(rightrot)))
 
-			l.left = Node(l)
-			l.right = Node(l)	
+			l.left = Node(leftrot, leftpos, l)
+			l.right = Node(rightrot, rightpos, l)	
 			l.nut = 0
 			newleaves.append(l.left)
 			newleaves.append(l.right)
 
-		acorns = len(leaves) / 2
+		acorns = len(newleaves) / 2
 
 		while(acorns > 0):
 			i = random.randrange(len(newleaves))
@@ -140,7 +144,9 @@ class OakTree():
 			if newleaves[i].nut == 0:	
 				newleaves[i].grow_nut()
 				acorns -= 1
-		
+
+		settings.BRANCH_LENGTH *= settings.BRANCH_LENGTH_SCALE
+		settings.BRANCH_ROTATION *= settings.BRANCH_ROTATION_SCALE		
 		self.generations += 1
 		self.balance()
 
@@ -155,17 +161,17 @@ class OakTree():
 
 class Node:
 	
-	def __init__(self, position, parent = None):
+	def __init__(self, rotation, position, parent = None):
 		self.parent = parent or self
 		self.left = None
 		self.right = None
 		self.position = position
+		self.rotation = rotation
 		self.nut = 0
 		self.squirrel = None
 
 	def grow_nut(self):
-		if self.nut == 0: #if selected for growth and no acorn present, generate one of random weight
-			self.nut = random.randint(1, 3)
+		self.nut = random.randint(1, 3)
 
 	def weight(self):
 		if not (self.left or self.right):
@@ -179,6 +185,20 @@ class Node:
 		else:
 			return 1 + self.parent.depth()
 	
+	def draw(self, window):
+
+		if self.nut > 0:
+			window.blit(pygame.transform.scale(settings.IMG_ACORNS[self.nut-1], (16, 16)), self.position)
+
+		if not (self.left or self.right):
+			return
+		else:
+		
+			pygame.draw.line(window, settings.BRANCH_COLOUR, self.position, self.left.position, 8)
+			pygame.draw.line(window, settings.BRANCH_COLOUR, self.position, self.right.position, 8)
+			self.left.draw(window)
+			self.right.draw(window)
+
 	#returns leaves for this subtree
 	def leaves(self, leaflist):
 		if not (self.left or self.right):
@@ -188,6 +208,8 @@ class Node:
 			self.left.leaves(leaflist)
 			self.right.leaves(leaflist)	
 	
+	
+
 pygame.init()
 
 clock = pygame.time.Clock()

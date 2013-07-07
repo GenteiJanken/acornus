@@ -6,8 +6,11 @@ GROWTH_PERIOD_END = 90
 
 # Tree dimensions
 TRUNK_DIMENSIONS = (50, 100)
-BRANCH_LENGTH = 30
-BRANCH_ROTATION = 35 #degrees
+TRUNK_ROTATION = 90
+BRANCH_LENGTH = 150
+BRANCH_LENGTH_SCALE = 0.75
+BRANCH_ROTATION = 45.0 #degrees
+BRANCH_ROTATION_SCALE = 0.8
 
 
 # Tree leaning (degrees)
@@ -22,9 +25,9 @@ BRANCH_COLOUR = (73, 54, 33) # cafe noir
 IMG_SQUIRREL = pygame.image.load('img/squirrel.png')
 
 IMG_ACORNS = (
-	pygame.image.load('img/bronzeacorn.png'), 
-	pygame.image.load('img/silveracorn.png'), 
-	pygame.image.load('img/goldacorn.png')
+	pygame.image.load('img/acorn_bronze.png'), 
+	pygame.image.load('img/acorn_silver.png'), 
+	pygame.image.load('img/acorn_gold.png')
 )
 # Other
 MAX_GENERATIONS = 5
