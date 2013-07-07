@@ -16,10 +16,11 @@ class Game:
 		self.tree = OakTree()
 		self.squirrel = Squirrel(self.tree)
 		self.tree.generate()
-		
+	
+
 		self.accum_time = 0.0
 		self.total_time = 0.0
-		
+		self.font = pygame.font.Font(None, 46)
 
 	def update(self, dt):
 		e = pygame.event.poll()
@@ -34,27 +35,40 @@ class Game:
 		self.accum_time += dt
 		self.total_time += dt
 					
-		period = settings.GROWTH_PERIOD - \
-			(settings.GROWTH_PERIOD - settings.GROWTH_PERIOD_END) * \
-			(self.total_time / settings.GROWTH_SCALE_TIME)
+		lean = self.tree.update(dt)
 
-		period = min(period, settings.GROWTH_PERIOD_END)
-		
-		if int(self.accum_time) >= period and self.tree.generations < settings.MAX_GENERATIONS:
+		if math.fabs(lean) > settings.LEAN_THRESHOLD:
+			self.reload()			
+
+		if int(self.accum_time) >= settings.GROWTH_PERIOD and self.tree.generations < settings.MAX_GENERATIONS:
 			#generate branches
 			self.tree.generate()
 			self.accum_time = 0.0
 			
 
 	def draw(self):
+		
 		self.window.fill(settings.SKY_COLOUR)
 		self.tree.draw(self.window)
 		self.squirrel.draw(self.window)
+
+		text = self.font.render("" + str(self.tree.lean), 1, settings.TEXT_COLOUR)
+		self.window.blit(text, self.world_to_screen((0.8, 0.8)))
 		pygame.display.update()
 
-	def world_to_screen(x, y):
-		pass
+	def world_to_screen(self, pos):
+		sw, sh = self.window.get_size()
+		
+		return (pos[0] * sw, pos[1] * sh)
 
+	def reload(self):
+		self.tree = OakTree()
+		self.squirrel = Squirrel(self.tree)
+		self.tree.generate()
+
+		self.accum_time = 0.0
+		self.total_time = 0.0
+			
 class Squirrel():
 
 	def __init__(self, tree):
@@ -65,7 +79,7 @@ class Squirrel():
 		
 	def update(self, dt, key):
 		
-		if key == K_UP:
+		if key == K_DOWN and not (self.node.left and self.node.right):
 	
 			if self.node.nut == 0:
 				self.node.nut = self.nut
@@ -81,7 +95,7 @@ class Squirrel():
 			self.move_to(self.node.left)
 		elif key == K_RIGHT and self.node.right:
 			self.move_to(self.node.right)
-		elif key == K_DOWN and not (self.node.parent == self.node):
+		elif key == K_UP and not (self.node.parent == self.node):
 			self.move_to(self.node.parent)
 	
 
@@ -95,7 +109,7 @@ class Squirrel():
 		y = self.node.position[1]
 		
 		flip = (self.node == self.node.parent.left)
-		window.blit(pygame.transform.flip(pygame.transform.scale(self.sprite, (32, 32)), flip, False), self.node.position)
+		window.blit(pygame.transform.flip(pygame.transform.scale(self.sprite, (30, 30)), flip, False), game.world_to_screen(self.node.position))
 
 class OakTree():
 
@@ -104,7 +118,7 @@ class OakTree():
 		self.lean_rate = 0.0
 		self.lean = 0.0
 		self.dimensions = [settings.TRUNK_DIMENSIONS[0], settings.TRUNK_DIMENSIONS[1]]		
-		self.root = Node(settings.TRUNK_ROTATION, (500, 100))
+		self.root = Node(settings.TRUNK_ROTATION, (0.5, 0.1))
 		self.generations = 0
 
 	def update(self, dt):
@@ -188,14 +202,14 @@ class Node:
 	def draw(self, window):
 
 		if self.nut > 0:
-			window.blit(pygame.transform.scale(settings.IMG_ACORNS[self.nut-1], (16, 16)), self.position)
+			window.blit(pygame.transform.scale(settings.IMG_ACORNS[self.nut-1], (16, 16)), game.world_to_screen(self.position))
 
 		if not (self.left or self.right):
 			return
 		else:
 		
-			pygame.draw.line(window, settings.BRANCH_COLOUR, self.position, self.left.position, 8)
-			pygame.draw.line(window, settings.BRANCH_COLOUR, self.position, self.right.position, 8)
+			pygame.draw.line(window, settings.BRANCH_COLOUR, game.world_to_screen(self.position), game.world_to_screen(self.left.position), 8)
+			pygame.draw.line(window, settings.BRANCH_COLOUR, game.world_to_screen(self.position), game.world_to_screen(self.right.position), 8)
 			self.left.draw(window)
 			self.right.draw(window)
 
@@ -216,11 +230,16 @@ clock = pygame.time.Clock()
 running = True
 
 window = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+pygame.display.set_caption('Acornus')
 game = Game(window)
 
 def close():
 	global running
 	running = False
+
+def reload():
+	game = Game(window)
+
 
 while running:
 	clock.tick(30)
