@@ -34,8 +34,9 @@ class Game:
 		
 		self.accum_time += dt
 		self.total_time += dt
-					
-		lean = self.tree.update(dt)
+	
+		if self.tree.generations < settings.MAX_GENERATIONS:				
+			lean = self.tree.update(dt)
 
 		if math.fabs(lean) > settings.LEAN_THRESHOLD:
 			self.reload()			
