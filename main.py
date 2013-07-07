@@ -13,48 +13,54 @@ class Game:
 
 	def __init__(self, window):
 		self.window = window
-		self.tree = OakTree(None)
-		self.squirrel = Squirrel(None)
+		self.tree = OakTree()
+		self.squirrel = Squirrel(self.tree)
 		self.accum_time = 0.0
 		self.total_time = 0.0
-
+		
 
 	def update(self, dt):
 		e = pygame.event.poll()
 	
 		if e.type == KEYUP:
 			self.squirrel.update(dt, e.key)
+		elif e.type == VIDEORESIZE:
+			self.window = pygame.display.set_mode((e.size), pygame.RESIZABLE)
 		elif e.type == QUIT:
 			close()
 		
 		self.accum_time += dt
 		self.total_time += dt
-				
+					
 		period = settings.SPAWN_PERIOD - \
 			(settings.SPAWN_PERIOD - settings.SPAWN_PERIOD_END) * \
 			(self.total_time / settings.SPAWN_SCALE_TIME)
 
 		period = min(period, settings.SPAWN_PERIOD_END)
-
-
+		
 		if int(self.accum_time) >= period:
 			#generate branches
 			self.tree.generate()
 			self.accum_time = 0.0
-	
+			
+
 	def draw(self):
+		self.window.fill(settings.SKY_COLOUR)
 		self.tree.draw(self.window)
+		
+		pygame.display.update()
 
 class Squirrel():
 
-	def __init__(self, sprite):
+	def __init__(self, tree):
 		self.nut = 0
-		self.sprite = sprite
-		self.node = None
+		self.sprite = settings.IMG_SQUIRREL
+		self.tree = tree
+		self.node = tree.root
 		
 	def update(self, dt, key):
 		
-		if key == UP:
+		if key == K_UP:
 	
 			if self.node.nut == 0:
 				self.node.nut = self.nut
@@ -62,12 +68,15 @@ class Squirrel():
 				tmp = self.nut
 				self.nut = self.node.nut 
 				self.node.nut = tmp	
-				
-		elif key == LEFT and self.node.left:
+			
+			self.tree.balance()
+						
+	
+		elif key == K_LEFT and self.node.left:
 			self.move_to(self.node.left)
-		elif key == RIGHT and self.node.right:
+		elif key == K_RIGHT and self.node.right:
 			self.move_to(self.node.right)
-		elif key == DOWN and not (self.node.parent == self.node):
+		elif key == K_DOWN and not (self.node.parent == self.node):
 			self.move_to(self.node.parent)
 		else: #invalid input	
 			return
@@ -82,15 +91,17 @@ class Squirrel():
 
 class OakTree():
 
-	def __init__(self, sprite):
-		self.sprite = sprite		
+	def __init__(self, ):
+			
 		self.lean_rate = 0.0
 		self.lean = 0.0
-		self.dimensions = [50, 100]		
+		self.dimensions = [settings.TRUNK_DIMENSIONS[0], settings.TRUNK_DIMENSIONS[1]]		
 		self.root = Node((0, 100))
+		
 
 	def update(self, dt):
 		self.lean += self.lean_rate * dt
+		return self.lean
 
 	def draw(self, window):
 		pass
@@ -121,6 +132,7 @@ class OakTree():
 				newleaves[i].grow_nut()
 				acorns -= 1
 		
+		self.balance()
 
 	#Determines weight on two main subtrees, updates
 	def balance(self):
@@ -161,6 +173,7 @@ class Node:
 	def leaves(self, leaflist):
 		if not (self.left or self.right):
 			leaflist.append(self)
+			return
 		else:
 			self.left.leaves(leaflist)
 			self.right.leaves(leaflist)	
@@ -180,6 +193,6 @@ def close():
 while running:
 	clock.tick(30)
 	dt = clock.get_time()/1000.0
-
 	game.update(dt)
+	
 	game.draw()
