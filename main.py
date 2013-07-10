@@ -34,7 +34,9 @@ class Game:
 		
 		self.accum_time += dt
 		self.total_time += dt
-	
+		
+		lean = 0
+
 		if self.tree.generations < settings.MAX_GENERATIONS:				
 			lean = self.tree.update(dt)
 
@@ -121,6 +123,8 @@ class OakTree():
 		self.dimensions = [settings.TRUNK_DIMENSIONS[0], settings.TRUNK_DIMENSIONS[1]]		
 		self.root = Node(settings.TRUNK_ROTATION, (0.5, 0.1))
 		self.generations = 0
+		self.branch_length = settings.BRANCH_LENGTH
+		self.branch_rotation = settings.BRANCH_ROTATION
 
 	def update(self, dt):
 		self.lean += self.lean_rate * dt
@@ -139,11 +143,11 @@ class OakTree():
 		newleaves = []
 
 		for l in leaves:
-			leftrot = l.rotation + settings.BRANCH_ROTATION
-			leftpos = (l.position[0] + settings.BRANCH_LENGTH * math.cos(math.radians(leftrot)), l.position[1] + settings.BRANCH_LENGTH * math.sin(math.radians(leftrot)))
+			leftrot = l.rotation + self.branch_rotation
+			leftpos = (l.position[0] + self.branch_length * math.cos(math.radians(leftrot)), l.position[1] + self.branch_length * math.sin(math.radians(leftrot)))
 			
-			rightrot = l.rotation - settings.BRANCH_ROTATION
-			rightpos = (l.position[0] + settings.BRANCH_LENGTH * math.cos(math.radians(rightrot)), l.position[1] + settings.BRANCH_LENGTH * math.sin(math.radians(rightrot)))
+			rightrot = l.rotation - self.branch_rotation
+			rightpos = (l.position[0] + self.branch_length * math.cos(math.radians(rightrot)), l.position[1] + self.branch_length * math.sin(math.radians(rightrot)))
 
 			l.left = Node(leftrot, leftpos, l)
 			l.right = Node(rightrot, rightpos, l)	
@@ -160,8 +164,8 @@ class OakTree():
 				newleaves[i].grow_nut()
 				acorns -= 1
 
-		settings.BRANCH_LENGTH *= settings.BRANCH_LENGTH_SCALE
-		settings.BRANCH_ROTATION *= settings.BRANCH_ROTATION_SCALE		
+		self.branch_length *= settings.BRANCH_LENGTH_SCALE
+		self.branch_rotation *= settings.BRANCH_ROTATION_SCALE		
 		self.generations += 1
 		self.balance()
 
